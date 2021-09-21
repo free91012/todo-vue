@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <!-- <link rel="stylesheet" href="./vue-exercise-gh-pages/stylesheets/all.css"> -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css" integrity="sha384-B0vP5xmATw1+K9KRQjQERJvTumQW0nPEzvF6L/Z6nronJ3oUOFUFpCjEUQouq2+l" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.12"></script>
+    <style>
+        .completed {
+  text-decoration: line-through
+}
+    </style>
+</head>
+<body>
+    <div id="app" class="container my-3">
+        <div class="input-group mb-3">
+          <div class="input-group-prepend">
+            <span class="input-group-text" id="basic-addon1">待辦事項</span>
+          </div>
+          <input type="text" class="form-control" placeholder="準備要做的任務" v-model="newTodo" @keyup.enter="addTodo">
+          <div class="input-group-append">
+            <button class="btn btn-primary" type="button" @click="addTodo">新增</button>
+          </div>
+        </div>
+        <div class="card text-center">
+          <div class="card-header">
+            <ul class="nav nav-tabs card-header-tabs">
+              <li class="nav-item">
+                <a class="nav-link" href="#" :class="{'active' : visibility == 'all'}" @click="visibility = 'all'">全部</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link " href="#" :class="{'active' : visibility == 'active'}"  @click="visibility = 'active'">進行中</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="#" :class="{'active' : visibility == 'completed'}"  @click="visibility = 'completed'">已完成</a>
+              </li>
+            </ul>
+          </div>
+          <ul class="list-group list-group-flush text-left">
+            <li class="list-group-item" v-for="item in filterTodo" @dblclick="editTodo(item)">
+              <div class="d-flex" v-if ="item.id !== catchTodo.id">
+                <div class="form-check">
+                  <input type="checkbox" class="form-check-input" :id="item.id" v-model="item.completed">
+                  <label class="form-check-label" :for="item.id" :class="{'completed':item.completed == true}">
+                    {{item.title}}
+                  </label>
+                </div>
+                <button type="button" class="close ml-auto" aria-label="Close" @click="removeTodo(item)">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+            <input type="text" class="form-control" v-model="catchTitle" v-if ="item.id == catchTodo.id" @keyup.esc="cancelTodo" @keyup.enter="editDone(item)">
+            </li>
+          </ul>
+          <div class="card-footer d-flex justify-content-between">
+            <span>還有{{totalTitle}}筆任務未完成</span>
+            <a href="#" @click="removeAll">清除所有任務</a>
+          </div>
+        </div>
+      </div>
+
+
+      <script>
+          let app = new Vue({
+  el:'#app',
+  data:{
+    newTodo:'',
+    todos:[],
+    todos:JSON.parse(localStorage.getItem('todos')) ||[],
+    visibility:'all',
+    catchTitle:'',
+    catchTodo:[],
+  },
+   methods:{
+    addTodo:function(){
+      let title = this.newTodo.trim();
+      let id = Math.floor(Date.now());
+      if (!title){
+        return
+      }else{
+        this.todos.push({
+          title,
+          id,
+          completed:false
+        });
+        localStorage.setItem('todos',JSON.stringify(this.todos));
+        this.newTodo='';
+      }
+    },
+     removeTodo:function(item){
+       let num = this.todos.indexOf(item);
+       this.todos.splice(num,1);
+       localStorage.setItem('todos',JSON.stringify(this.todos));
+     },
+     removeAll:function(){
+       this.todos=[]
+     },
+     editTodo:function(item){
+       this.catchTitle = item.title;
+       this.catchTodo = item
+     },
+     cancelTodo:function(){
+       this.catchTitle='';
+       this.catchTodo = []
+     },
+     editDone:function(item){
+       item.title = this.catchTitle;
+       this.catchTitle='';
+       this.catchTodo=[];
+       localStorage.setItem('todos',JSON.stringify(this.todos));
+     }
+   },
+   computed:{
+      filterTodo:function(){
+        if(this.visibility == 'all'){
+          return this.todos
+        }else if(this.visibility == 'active' ){
+          let newTodos=[];
+          this.todos.filter(function(item){
+            if(!item.completed){
+              newTodos.push(item)
+            };
+          });
+          return newTodos;
+        }else if(this.visibility == 'completed' ){
+          let newTodos=[];
+          this.todos.filter(function(item){
+            if(item.completed){
+              newTodos.push(item)
+            };
+          });
+          return newTodos;
+        }
+      },
+      totalTitle:function(){
+      let newTodos=[];
+      this.todos.filter(function(item){
+      if(!item.completed){
+      newTodos.push(item)
+        }});
+      let len = newTodos.length;
+      return len
+     }
+   }
+})
+      </script>
+      <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+      <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous"></script>
+      <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.min.js" integrity="sha384-+YQ4JLhjyBLPDQt//I+STsc9iw4uQqACwlvpslubQzn4u2UU2UFM80nGisd026JF" crossorigin="anonymous"></script>
+</body>
+</html>
